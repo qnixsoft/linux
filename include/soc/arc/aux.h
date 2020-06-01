@@ -19,6 +19,10 @@
 
 #else	/* !CONFIG_ARC */
 
+#ifdef CONFIG_WASM
+#include <asm/types.h>
+#endif
+
 static inline int read_aux_reg(u32 r)
 {
 	return 0;

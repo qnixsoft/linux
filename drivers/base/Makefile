@@ -8,14 +8,14 @@ obj-y			:= component.o core.o bus.o dd.o syscore.o \
 			   topology.o container.o property.o cacheinfo.o \
 			   devcon.o
 obj-$(CONFIG_DEVTMPFS)	+= devtmpfs.o
-obj-y			+= power/
+# obj-y			+= power/
 obj-$(CONFIG_ISA_BUS_API)	+= isa.o
-obj-y				+= firmware_loader/
+# obj-y				+= firmware_loader/
 obj-$(CONFIG_NUMA)	+= node.o
 obj-$(CONFIG_MEMORY_HOTPLUG_SPARSE) += memory.o
-ifeq ($(CONFIG_SYSFS),y)
-obj-$(CONFIG_MODULES)	+= module.o
-endif
+# ifeq ($(CONFIG_SYSFS),y)
+# obj-$(CONFIG_MODULES)	+= module.o
+# endif
 obj-$(CONFIG_SYS_HYPERVISOR) += hypervisor.o
 obj-$(CONFIG_REGMAP)	+= regmap/
 obj-$(CONFIG_SOC_BUS) += soc.o
@@ -24,7 +24,7 @@ obj-$(CONFIG_DEV_COREDUMP) += devcoredump.o
 obj-$(CONFIG_GENERIC_MSI_IRQ_DOMAIN) += platform-msi.o
 obj-$(CONFIG_GENERIC_ARCH_TOPOLOGY) += arch_topology.o
 
-obj-y			+= test/
+# obj-y			+= test/
 
 ccflags-$(CONFIG_DEBUG_DRIVER) := -DDEBUG
 

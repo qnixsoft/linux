@@ -7,11 +7,9 @@ obj-$(CONFIG_PCI)		+= access.o bus.o probe.o host-bridge.o \
 				   pci-sysfs.o rom.o setup-res.o irq.o vpd.o \
 				   setup-bus.o vc.o mmap.o setup-irq.o
 
-ifdef CONFIG_PCI
-obj-$(CONFIG_PROC_FS)		+= proc.o
-obj-$(CONFIG_SYSFS)		+= slot.o
-obj-$(CONFIG_OF)		+= of.o
-endif
+obj-$(CONFIG_PROC_FS)		+= ${CONFIG_PCI:y=proc.o}
+obj-$(CONFIG_SYSFS)		+= ${CONFIG_PCI:y=slot.o}
+obj-$(CONFIG_OF)		+= ${CONFIG_PCI:y=of.o}
 
 obj-$(CONFIG_PCI_QUIRKS)	+= quirks.o
 obj-$(CONFIG_PCIEPORTBUS)	+= pcie/

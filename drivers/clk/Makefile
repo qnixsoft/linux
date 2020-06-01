@@ -12,9 +12,7 @@ obj-$(CONFIG_COMMON_CLK)	+= clk-mux.o
 obj-$(CONFIG_COMMON_CLK)	+= clk-composite.o
 obj-$(CONFIG_COMMON_CLK)	+= clk-fractional-divider.o
 obj-$(CONFIG_COMMON_CLK)	+= clk-gpio.o
-ifeq ($(CONFIG_OF), y)
-obj-$(CONFIG_COMMON_CLK)	+= clk-conf.o
-endif
+obj-$(CONFIG_COMMON_CLK)	+= ${CONFIG_OF:y=clk-conf.o}
 
 # hardware specific clock types
 # please keep this section sorted lexicographically by file path name
@@ -79,9 +77,7 @@ obj-$(CONFIG_MACH_LOONGSON32)		+= loongson1/
 obj-y					+= mediatek/
 obj-$(CONFIG_COMMON_CLK_AMLOGIC)	+= meson/
 obj-$(CONFIG_MACH_PIC32)		+= microchip/
-ifeq ($(CONFIG_COMMON_CLK), y)
-obj-$(CONFIG_ARCH_MMP)			+= mmp/
-endif
+obj-$(CONFIG_ARCH_MMP)			+= ${CONFIG_COMMON_CLK:y=mmp/}
 obj-y					+= mvebu/
 obj-$(CONFIG_ARCH_MXS)			+= mxs/
 obj-$(CONFIG_COMMON_CLK_NXP)		+= nxp/
@@ -104,9 +100,7 @@ obj-y					+= ti/
 obj-$(CONFIG_CLK_UNIPHIER)		+= uniphier/
 obj-$(CONFIG_ARCH_U8500)		+= ux500/
 obj-$(CONFIG_COMMON_CLK_VERSATILE)	+= versatile/
-ifeq ($(CONFIG_COMMON_CLK), y)
-obj-$(CONFIG_X86)			+= x86/
-endif
+obj-$(CONFIG_X86)			+= ${CONFIG_COMMON_CLK:y=x86/}
 obj-$(CONFIG_ARCH_ZX)			+= zte/
 obj-$(CONFIG_ARCH_ZYNQ)			+= zynq/
 obj-$(CONFIG_COMMON_CLK_ZYNQMP)         += zynqmp/

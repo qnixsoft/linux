@@ -1364,6 +1364,8 @@ static void * __init memblock_alloc_internal(
 	void *ptr;
 	enum memblock_flags flags = choose_memblock_flags();
 
+	pr_err("%s is breaking\n", __func__);
+
 	if (WARN_ONCE(nid == MAX_NUMNODES, "Usage of MAX_NUMNODES is deprecated. Use NUMA_NO_NODE instead\n"))
 		nid = NUMA_NO_NODE;
 

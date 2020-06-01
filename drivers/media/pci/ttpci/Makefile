@@ -6,9 +6,7 @@
 
 dvb-ttpci-objs := av7110_hw.o av7110_v4l.o av7110_av.o av7110_ca.o av7110.o av7110_ipack.o dvb_filter.o
 
-ifdef CONFIG_DVB_AV7110_IR
-dvb-ttpci-objs += av7110_ir.o
-endif
+dvb-ttpci-objs += ${CONFIG_DVB_AV7110_IR:y=av7110_ir.o}
 
 obj-$(CONFIG_TTPCI_EEPROM) += ttpci-eeprom.o
 obj-$(CONFIG_DVB_BUDGET_CORE) += budget-core.o

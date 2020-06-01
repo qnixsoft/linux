@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0
-ifeq (, $(findstring -W,$(EXTRA_CFLAGS)))
-	ccflags-y += -Werror
-endif
+extra_cflags_w != echo "${EXTRA_CFLAGS}" | grep -e "-W" && echo y || true
+ccflags-${extra_cflags_w} += -Werror
 
 tilcdc-y := \
 	tilcdc_plane.o \

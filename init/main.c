@@ -564,9 +564,11 @@ asmlinkage __visible void __init start_kernel(void)
 	add_device_randomness(command_line, strlen(command_line));
 	boot_init_stack_canary();
 	mm_init_cpumask(&init_mm);
-	setup_command_line(command_line);
+	pr_err("Skipping setup_command_line and other functions that "
+	       "depend on working mm\n");
+	/* setup_command_line(command_line); */
 	setup_nr_cpu_ids();
-	setup_per_cpu_areas();
+	/* setup_per_cpu_areas(); */
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
 	boot_cpu_hotplug_init();
 
@@ -590,7 +592,7 @@ asmlinkage __visible void __init start_kernel(void)
 	 * kmem_cache_init()
 	 */
 	setup_log_buf(0);
-	vfs_caches_init_early();
+	/* vfs_caches_init_early(); */
 	sort_main_extable();
 	trap_init();
 	mm_init();
@@ -614,7 +616,7 @@ asmlinkage __visible void __init start_kernel(void)
 	if (WARN(!irqs_disabled(),
 		 "Interrupts were enabled *very* early, fixing it\n"))
 		local_irq_disable();
-	radix_tree_init();
+	/* radix_tree_init(); */
 
 	/*
 	 * Set up housekeeping before setting up workqueues to allow the unbound
@@ -627,7 +629,7 @@ asmlinkage __visible void __init start_kernel(void)
 	 * early.  Work item execution depends on kthreads and starts after
 	 * workqueue_init().
 	 */
-	workqueue_init_early();
+	/* workqueue_init_early(); */
 
 	rcu_init();
 
@@ -639,8 +641,10 @@ asmlinkage __visible void __init start_kernel(void)
 
 	context_tracking_init();
 	/* init some links before init_ISA_irqs() */
+#if 0
 	early_irq_init();
 	init_IRQ();
+#endif
 	tick_init();
 	rcu_init_nohz();
 	init_timers();
@@ -664,7 +668,7 @@ asmlinkage __visible void __init start_kernel(void)
 	 * we've done PCI setups etc, and console_init() must be aware of
 	 * this. But we do want output early, in case something goes wrong.
 	 */
-	console_init();
+	/* console_init(); */
 	if (panic_later)
 		panic("Too many boot %s vars at `%s'", panic_later,
 		      panic_param);
@@ -698,12 +702,13 @@ asmlinkage __visible void __init start_kernel(void)
 	page_ext_init();
 	kmemleak_init();
 	debug_objects_mem_init();
-	setup_per_cpu_pageset();
+	/* setup_per_cpu_pageset(); */
 	numa_policy_init();
 	acpi_early_init();
 	if (late_time_init)
 		late_time_init();
 	sched_clock_init();
+#if 0
 	calibrate_delay();
 	pid_idr_init();
 	anon_vma_init();
@@ -715,17 +720,20 @@ asmlinkage __visible void __init start_kernel(void)
 	cred_init();
 	fork_init();
 	proc_caches_init();
+#endif
 	uts_ns_init();
 	buffer_init();
 	key_init();
 	security_init();
 	dbg_late_init();
+#if 0
 	vfs_caches_init();
 	pagecache_init();
 	signals_init();
 	seq_file_init();
+#endif
 	proc_root_init();
-	nsfs_init();
+	/* nsfs_init(); */
 	cpuset_init();
 	cgroup_init();
 	taskstats_init_early();
@@ -742,7 +750,7 @@ asmlinkage __visible void __init start_kernel(void)
 	}
 
 	/* Do the rest non-__init'ed, we're now alive */
-	arch_call_rest_init();
+	/* arch_call_rest_init(); */
 }
 
 /* Call all constructor functions linked into the kernel. */

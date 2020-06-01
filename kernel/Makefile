@@ -15,28 +15,9 @@ obj-y     = fork.o exec_domain.o panic.o \
 obj-$(CONFIG_MODULES) += kmod.o
 obj-$(CONFIG_MULTIUSER) += groups.o
 
-ifdef CONFIG_FUNCTION_TRACER
-# Do not trace internal ftrace files
-CFLAGS_REMOVE_irq_work.o = $(CC_FLAGS_FTRACE)
-endif
-
-# Prevents flicker of uninteresting __do_softirq()/__local_bh_disable_ip()
-# in coverage traces.
-KCOV_INSTRUMENT_softirq.o := n
-# These are called from save_stack_trace() on slub debug path,
-# and produce insane amounts of uninteresting coverage.
-KCOV_INSTRUMENT_module.o := n
-KCOV_INSTRUMENT_extable.o := n
-# Don't self-instrument.
-KCOV_INSTRUMENT_kcov.o := n
-KASAN_SANITIZE_kcov.o := n
-
-# cond_syscall is currently not LTO compatible
-CFLAGS_sys_ni.o = $(DISABLE_LTO)
-
 obj-y += sched/
 obj-y += locking/
-obj-y += power/
+# obj-y += power/
 obj-y += printk/
 obj-y += irq/
 obj-y += rcu/
@@ -49,14 +30,7 @@ obj-$(CONFIG_PROFILING) += profile.o
 obj-$(CONFIG_STACKTRACE) += stacktrace.o
 obj-y += time/
 obj-$(CONFIG_FUTEX) += futex.o
-ifeq ($(CONFIG_COMPAT),y)
-obj-$(CONFIG_FUTEX) += futex_compat.o
-endif
-obj-$(CONFIG_GENERIC_ISA_DMA) += dma.o
-obj-$(CONFIG_SMP) += smp.o
-ifneq ($(CONFIG_SMP),y)
-obj-y += up.o
-endif
+
 obj-$(CONFIG_UID16) += uid16.o
 obj-$(CONFIG_MODULES) += module.o
 obj-$(CONFIG_MODULE_SIG) += module_signing.o
@@ -120,14 +94,3 @@ obj-$(CONFIG_RSEQ) += rseq.o
 obj-$(CONFIG_GCC_PLUGIN_STACKLEAK) += stackleak.o
 KASAN_SANITIZE_stackleak.o := n
 KCOV_INSTRUMENT_stackleak.o := n
-
-$(obj)/configs.o: $(obj)/config_data.h
-
-targets += config_data.gz
-$(obj)/config_data.gz: $(KCONFIG_CONFIG) FORCE
-	$(call if_changed,gzip)
-
-      filechk_ikconfiggz = (echo "static const char kernel_config_data[] __used = MAGIC_START"; cat $< | scripts/bin2c; echo "MAGIC_END;")
-targets += config_data.h
-$(obj)/config_data.h: $(obj)/config_data.gz FORCE
-	$(call filechk,ikconfiggz)

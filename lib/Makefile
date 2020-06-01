@@ -3,10 +3,10 @@
 # Makefile for some libs needed in the kernel.
 #
 
-ifdef CONFIG_FUNCTION_TRACER
-ORIG_CFLAGS := $(KBUILD_CFLAGS)
-KBUILD_CFLAGS = $(subst $(CC_FLAGS_FTRACE),,$(ORIG_CFLAGS))
-endif
+# ifdef CONFIG_FUNCTION_TRACER
+# ORIG_CFLAGS := $(KBUILD_CFLAGS)
+# KBUILD_CFLAGS = $(subst $(CC_FLAGS_FTRACE),,$(ORIG_CFLAGS))
+# endif
 
 # These files are disabled because they produce lots of non-interesting and/or
 # flaky coverage that is not a function of syscall inputs. For example,
@@ -53,9 +53,9 @@ obj-$(CONFIG_TEST_HASH) += test_hash.o test_siphash.o
 obj-$(CONFIG_TEST_IDA) += test_ida.o
 obj-$(CONFIG_TEST_KASAN) += test_kasan.o
 CFLAGS_test_kasan.o += -fno-builtin
-CFLAGS_test_kasan.o += $(call cc-disable-warning, vla)
+# CFLAGS_test_kasan.o += $(call cc-disable-warning, vla)
 obj-$(CONFIG_TEST_UBSAN) += test_ubsan.o
-CFLAGS_test_ubsan.o += $(call cc-disable-warning, vla)
+# CFLAGS_test_ubsan.o += $(call cc-disable-warning, vla)
 UBSAN_SANITIZE_test_ubsan.o := y
 obj-$(CONFIG_TEST_KSTRTOX) += test-kstrtox.o
 obj-$(CONFIG_TEST_LIST_SORT) += test_list_sort.o
@@ -76,10 +76,10 @@ obj-$(CONFIG_TEST_KMOD) += test_kmod.o
 obj-$(CONFIG_TEST_DEBUG_VIRTUAL) += test_debug_virtual.o
 obj-$(CONFIG_TEST_MEMCAT_P) += test_memcat_p.o
 
-ifeq ($(CONFIG_DEBUG_KOBJECT),y)
-CFLAGS_kobject.o += -DDEBUG
-CFLAGS_kobject_uevent.o += -DDEBUG
-endif
+# ifeq ($(CONFIG_DEBUG_KOBJECT),y)
+# CFLAGS_kobject.o += -DDEBUG
+# CFLAGS_kobject_uevent.o += -DDEBUG
+# endif
 
 obj-$(CONFIG_DEBUG_INFO_REDUCED) += debug_info.o
 CFLAGS_debug_info.o += $(call cc-option, -femit-struct-debug-detailed=any)
@@ -206,8 +206,8 @@ KCOV_INSTRUMENT_stackdepot.o := n
 
 libfdt_files = fdt.o fdt_ro.o fdt_wip.o fdt_rw.o fdt_sw.o fdt_strerror.o \
 	       fdt_empty_tree.o
-$(foreach file, $(libfdt_files), \
-	$(eval CFLAGS_$(file) = -I$(src)/../scripts/dtc/libfdt))
+# $(foreach file, $(libfdt_files), \
+# 	$(eval CFLAGS_$(file) = -I$(src)/../scripts/dtc/libfdt))
 lib-$(CONFIG_LIBFDT) += $(libfdt_files)
 
 obj-$(CONFIG_RBTREE_TEST) += rbtree_test.o
@@ -226,32 +226,32 @@ hostprogs-y	+= gen_crc64table
 clean-files	:= crc32table.h
 clean-files	+= crc64table.h
 
-$(obj)/crc32.o: $(obj)/crc32table.h
+# $(obj)/crc32.o: $(obj)/crc32table.h
 
 quiet_cmd_crc32 = GEN     $@
       cmd_crc32 = $< > $@
 
-$(obj)/crc32table.h: $(obj)/gen_crc32table
-	$(call cmd,crc32)
+# $(obj)/crc32table.h: $(obj)/gen_crc32table
+# 	$(call cmd,crc32)
 
-$(obj)/crc64.o: $(obj)/crc64table.h
+# $(obj)/crc64.o: $(obj)/crc64table.h
 
 quiet_cmd_crc64 = GEN     $@
       cmd_crc64 = $< > $@
 
-$(obj)/crc64table.h: $(obj)/gen_crc64table
-	$(call cmd,crc64)
+# $(obj)/crc64table.h: $(obj)/gen_crc64table
+# 	$(call cmd,crc64)
 
 #
 # Build a fast OID lookip registry from include/linux/oid_registry.h
 #
 obj-$(CONFIG_OID_REGISTRY) += oid_registry.o
 
-$(obj)/oid_registry.o: $(obj)/oid_registry_data.c
+# $(obj)/oid_registry.o: $(obj)/oid_registry_data.c
 
-$(obj)/oid_registry_data.c: $(srctree)/include/linux/oid_registry.h \
-			    $(src)/build_OID_registry
-	$(call cmd,build_OID_registry)
+# $(obj)/oid_registry_data.c: $(srctree)/include/linux/oid_registry.h \
+# 			    $(src)/build_OID_registry
+# 	$(call cmd,build_OID_registry)
 
 quiet_cmd_build_OID_registry = GEN     $@
       cmd_build_OID_registry = perl $(srctree)/$(src)/build_OID_registry $< $@

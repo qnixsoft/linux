@@ -26,11 +26,9 @@ obj-$(CONFIG_RTC)		+= rtc.o
 obj-$(CONFIG_HPET)		+= hpet.o
 obj-$(CONFIG_EFI_RTC)		+= efirtc.o
 obj-$(CONFIG_XILINX_HWICAP)	+= xilinx_hwicap/
-ifeq ($(CONFIG_GENERIC_NVRAM),y)
-  obj-$(CONFIG_NVRAM)	+= generic_nvram.o
-else
-  obj-$(CONFIG_NVRAM)	+= nvram.o
-endif
+MAYBE_CONFIG_NVRAM		!=  test "${CONFIG_GENERIC_NVRAM}" == "y" && \
+					echo generic_nvram.o || echo nvram.o
+obj-${CONFIG_NVRAM}		+= ${MAYBE_CONFIG_NVRAM}
 obj-$(CONFIG_TOSHIBA)		+= toshiba.o
 obj-$(CONFIG_DS1620)		+= ds1620.o
 obj-$(CONFIG_HW_RANDOM)		+= hw_random/

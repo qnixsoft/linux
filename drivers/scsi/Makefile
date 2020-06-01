@@ -189,17 +189,17 @@ $(obj)/53c700.o $(MODVERDIR)/$(obj)/53c700.ver: $(obj)/53c700_d.h
 $(obj)/scsi_sysfs.o: $(obj)/scsi_devinfo_tbl.c
 
 quiet_cmd_bflags = GEN     $@
-	cmd_bflags = sed -n 's/.*define *BLIST_\([A-Z0-9_]*\) *.*/BLIST_FLAG_NAME(\1),/p' $< > $@
+cmd_bflags = sed -n 's/.*define *BLIST_\([A-Z0-9_]*\) *.*/BLIST_FLAG_NAME(\1),/p' $< > $@
 
-$(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h
-	$(call if_changed,bflags)
+# $(obj)/scsi_devinfo_tbl.c: include/scsi/scsi_devinfo.h
+# 	$(call if_changed,bflags)
 
 # If you want to play with the firmware, uncomment
 # GENERATE_FIRMWARE := 1
 
-ifdef GENERATE_FIRMWARE
+53c700_made != [[ -z "${GENERATE_FIRMWARE}" ]] || echo $(obj)/53c700_d.h
+# .MADE: ${53c700_made}
 
-$(obj)/53c700_d.h: $(src)/53c700.scr $(src)/script_asm.pl
-	$(PERL) -s $(src)/script_asm.pl -ncr7x0_family $@ $(@:_d.h=_u.h) < $<
-
-endif
+53c700_deps := $(src)/53c700.scr $(src)/script_asm.pl
+$(obj)/53c700_d.h: $(53c700_deps)
+	$(PERL) -s $(src)/script_asm.pl -ncr7x0_family $@ $(@:_d.h=_u.h) < $(53c700_deps)
