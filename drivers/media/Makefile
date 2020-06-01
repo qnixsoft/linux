@@ -13,9 +13,8 @@ obj-$(CONFIG_DVB_CORE)  += dvb-frontends/
 #
 # Now, let's link-in the media controller core
 #
-ifeq ($(CONFIG_MEDIA_CONTROLLER),y)
-  obj-$(CONFIG_MEDIA_SUPPORT) += mc/
-endif
+ms-$(CONFIG_MEDIA_SUPPORT) := mc/
+obj-$(CONFIG_MEDIA_CONTROLLER) := ${ms-y}
 
 obj-$(CONFIG_VIDEO_DEV) += v4l2-core/
 obj-$(CONFIG_DVB_CORE)  += dvb-core/

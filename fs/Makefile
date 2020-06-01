@@ -15,11 +15,11 @@ obj-y :=	open.o read_write.o file_table.o super.o \
 		stack.o fs_struct.o statfs.o fs_pin.o nsfs.o \
 		fs_types.o fs_context.o fs_parser.o fsopen.o
 
-ifeq ($(CONFIG_BLOCK),y)
-obj-y +=	buffer.o block_dev.o direct-io.o mpage.o
-else
-obj-y +=	no-block.o
-endif
+block-y != test "${CONFIG_BLOCK}" == y && \
+	echo buffer.o block_dev.o direct-io.o mpage.o || \
+	echo no-block.o
+
+obj-y				+= ${block-y}
 
 obj-$(CONFIG_PROC_FS) += proc_namespace.o
 

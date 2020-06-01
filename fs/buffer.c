@@ -1435,11 +1435,16 @@ static bool has_bh_in_lru(int cpu, void *dummy)
 	return false;
 }
 
+#ifdef CONFIG_SMP
 void invalidate_bh_lrus(void)
 {
 	on_each_cpu_cond(has_bh_in_lru, invalidate_bh_lru, NULL, 1);
 }
 EXPORT_SYMBOL_GPL(invalidate_bh_lrus);
+#else
+void invalidate_bh_lrus(void) {}
+EXPORT_SYMBOL_GPL(invalidate_bh_lrus);
+#endif
 
 void set_bh_page(struct buffer_head *bh,
 		struct page *page, unsigned long offset)

@@ -279,7 +279,11 @@ static inline void do_raw_spin_unlock(raw_spinlock_t *lock) __releases(lock)
 #endif
 
 #define raw_spin_lock_irq(lock)		_raw_spin_lock_irq(lock)
+#ifndef CONFIG_WASM
 #define raw_spin_lock_bh(lock)		_raw_spin_lock_bh(lock)
+#else
+#define raw_spin_lock_bh(lock)
+#endif
 #define raw_spin_unlock(lock)		_raw_spin_unlock(lock)
 #define raw_spin_unlock_irq(lock)	_raw_spin_unlock_irq(lock)
 
@@ -395,7 +399,12 @@ static __always_inline void spin_unlock(spinlock_t *lock)
 
 static __always_inline void spin_unlock_bh(spinlock_t *lock)
 {
+#ifndef CONFIG_WASM
 	raw_spin_unlock_bh(&lock->rlock);
+#else
+	printk(KERN_EMERG "Webassembly can't jump into computed address\n");
+	BUG();
+#endif
 }
 
 static __always_inline void spin_unlock_irq(spinlock_t *lock)

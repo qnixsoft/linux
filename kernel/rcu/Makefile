@@ -3,9 +3,8 @@
 # and is generally not a function of system call inputs.
 KCOV_INSTRUMENT := n
 
-ifeq ($(CONFIG_KCSAN),y)
-KBUILD_CFLAGS += -g -fno-omit-frame-pointer
-endif
+KBUILD_CFLAGS-$(CONFIG_KCSAN) := -g -fno-omit-frame-pointer
+KBUILD_CFLAGS += ${KBUILD_CFLAGS-y}
 
 obj-y += update.o sync.o
 obj-$(CONFIG_TREE_SRCU) += srcutree.o

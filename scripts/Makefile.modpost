@@ -43,14 +43,16 @@ __modpost:
 include include/config/auto.conf
 include scripts/Kbuild.include
 
-MODPOST = scripts/mod/modpost								\
+MODPOST- := scripts/mod/modpost
+MODPOST-y := echo scripts/mod/modpost
+MODPOST = ${MODPOST-${CONFIG_WASM}}							\
 	$(if $(CONFIG_MODVERSIONS),-m)							\
 	$(if $(CONFIG_MODULE_SRCVERSION_ALL),-a)					\
 	$(if $(CONFIG_SECTION_MISMATCH_WARN_ONLY),,-E)					\
 	$(if $(KBUILD_MODPOST_WARN),-w) \
 	-o $@
 
-ifdef MODPOST_VMLINUX
+ifdef MODPOST_VMLINUX 
 
 quiet_cmd_modpost = MODPOST $@
       cmd_modpost = $(MODPOST) $<

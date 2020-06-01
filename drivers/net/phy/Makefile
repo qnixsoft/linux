@@ -5,18 +5,14 @@ libphy-y			:= phy.o phy-c45.o phy-core.o phy_device.o \
 				   linkmode.o
 mdio-bus-y			+= mdio_bus.o mdio_device.o
 
-ifdef CONFIG_MDIO_DEVICE
-obj-y				+= mdio-boardinfo.o
-endif
+obj-y				+= ${CONFIG_MDIO_DEVICE:y=mdio-boardinfo.o}
 
 # PHYLIB implies MDIO_DEVICE, in that case, we have a bunch of circular
 # dependencies that does not make it possible to split mdio-bus objects into a
 # dedicated loadable module, so we bundle them all together into libphy.ko
-ifdef CONFIG_PHYLIB
-libphy-y			+= $(mdio-bus-y)
-else
-obj-$(CONFIG_MDIO_DEVICE)	+= mdio-bus.o
-endif
+libphy-${CONFIG_PHYLIB}		+= $(mdio-bus-y)
+phy-y := mdio-bus.o
+obj-$(CONFIG_MDIO_DEVICE)	+= ${phy-${CONFIG_PHYLIB}}
 libphy-$(CONFIG_SWPHY)		+= swphy.o
 libphy-$(CONFIG_LED_TRIGGER_PHY)	+= phy_led_triggers.o
 
@@ -56,10 +52,8 @@ obj-y				+= $(sfp-obj-y) $(sfp-obj-m)
 
 obj-$(CONFIG_ADIN_PHY)		+= adin.o
 obj-$(CONFIG_AMD_PHY)		+= amd.o
-aquantia-objs			+= aquantia_main.o
-ifdef CONFIG_HWMON
-aquantia-objs			+= aquantia_hwmon.o
-endif
+aquantia-$(CONFIG_HWMON)	+= aquantia_hwmon.o
+aquantia-objs			+= aquantia_main.o ${aquantia-y}
 obj-$(CONFIG_AQUANTIA_PHY)	+= aquantia.o
 obj-$(CONFIG_AX88796B_PHY)	+= ax88796b.o
 obj-$(CONFIG_AT803X_PHY)	+= at803x.o

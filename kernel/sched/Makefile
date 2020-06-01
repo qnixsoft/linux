@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0
-ifdef CONFIG_FUNCTION_TRACER
-CFLAGS_REMOVE_clock.o = $(CC_FLAGS_FTRACE)
-endif
+CFLAGS_REMOVE_clock-$(CONFIG_FUNCTION_TRACER) := ${CC_FLAGS_FTRACE}
+CFLAGS_REMOVE_clock.o := ${CFLAGS_REMOVE_clock-y}
 
 # These files are disabled because they produce non-interesting flaky coverage
 # that is not a function of syscall inputs. E.g. involuntary context switches.
@@ -13,14 +12,13 @@ KCOV_INSTRUMENT := n
 # eventually.
 KCSAN_SANITIZE := n
 
-ifneq ($(CONFIG_SCHED_OMIT_FRAME_POINTER),y)
 # According to Alan Modra <alan@linuxcare.com.au>, the -fno-omit-frame-pointer is
 # needed for x86 only.  Why this used to be enabled for all architectures is beyond
 # me.  I suspect most platforms don't need this, but until we know that for sure
 # I turn this off for IA-64 only.  Andreas Schwab says it's also needed on m68k
 # to get a correct value for the wait-channel (WCHAN in ps). --davidm
-CFLAGS_core.o := $(PROFILING) -fno-omit-frame-pointer
-endif
+CFLAGS_core-$(CONFIG_SCHED_OMIT_FRAME_POINTER) := $(PROFILING) -fno-omit-frame-pointer
+CFLAGS_core.o := ${CFLAGS_core-y}
 
 obj-y += core.o loadavg.o clock.o cputime.o
 obj-y += idle.o fair.o rt.o deadline.o

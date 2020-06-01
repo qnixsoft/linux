@@ -1,4 +1,6 @@
 # SPDX-License-Identifier: GPL-2.0-only
+sja1105-$(CONFIG_NET_DSA_SJA1105_PTP) := sja1105_ptp.o
+sja1105-$(CONFIG_NET_DSA_SJA1105_TAS) := sja1105_tas.o
 obj-$(CONFIG_NET_DSA_SJA1105) += sja1105.o
 
 sja1105-objs := \
@@ -9,15 +11,4 @@ sja1105-objs := \
     sja1105_clocking.o \
     sja1105_static_config.o \
     sja1105_dynamic_config.o \
-
-ifdef CONFIG_NET_DSA_SJA1105_PTP
-sja1105-objs += sja1105_ptp.o
-endif
-
-ifdef CONFIG_NET_DSA_SJA1105_TAS
-sja1105-objs += sja1105_tas.o
-endif
-
-ifdef CONFIG_NET_DSA_SJA1105_VL
-sja1105-objs += sja1105_vl.o
-endif
+    ${sja1105-y}

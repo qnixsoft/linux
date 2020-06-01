@@ -719,8 +719,8 @@ static void handle_symbol(struct module *mod, struct elf_info *info,
 		if (info->hdr->e_machine == EM_SPARC ||
 		    info->hdr->e_machine == EM_SPARCV9) {
 			/* Ignore register directives. */
-			if (ELF_ST_TYPE(sym->st_info) == STT_SPARC_REGISTER)
-				break;
+			/* if (ELF_ST_TYPE(sym->st_info) == STT_SPARC_REGISTER) */
+			/* 	break; */
 			if (symname[0] == '.') {
 				char *munged = NOFAIL(strdup(symname));
 				munged[0] = '_';
@@ -1748,20 +1748,20 @@ static unsigned int *reloc_location(struct elf_info *elf,
 
 static int addend_386_rel(struct elf_info *elf, Elf_Shdr *sechdr, Elf_Rela *r)
 {
-	unsigned int r_typ = ELF_R_TYPE(r->r_info);
-	unsigned int *location = reloc_location(elf, sechdr, r);
+	/* unsigned int r_typ = ELF_R_TYPE(r->r_info); */
+	/* unsigned int *location = reloc_location(elf, sechdr, r); */
 
-	switch (r_typ) {
-	case R_386_32:
-		r->r_addend = TO_NATIVE(*location);
-		break;
-	case R_386_PC32:
-		r->r_addend = TO_NATIVE(*location) + 4;
-		/* For CONFIG_RELOCATABLE=y */
-		if (elf->hdr->e_type == ET_EXEC)
-			r->r_addend += r->r_offset;
-		break;
-	}
+	/* switch (r_typ) { */
+	/* case R_386_32: */
+	/* 	r->r_addend = TO_NATIVE(*location); */
+	/* 	break; */
+	/* case R_386_PC32: */
+	/* 	r->r_addend = TO_NATIVE(*location) + 4; */
+	/* 	/1* For CONFIG_RELOCATABLE=y *1/ */
+	/* 	if (elf->hdr->e_type == ET_EXEC) */
+	/* 		r->r_addend += r->r_offset; */
+	/* 	break; */
+	/* } */
 	return 0;
 }
 
@@ -1787,12 +1787,12 @@ static int addend_arm_rel(struct elf_info *elf, Elf_Shdr *sechdr, Elf_Rela *r)
 	unsigned int r_typ = ELF_R_TYPE(r->r_info);
 
 	switch (r_typ) {
-	case R_ARM_ABS32:
-		/* From ARM ABI: (S + A) | T */
-		r->r_addend = (int)(long)
-			      (elf->symtab_start + ELF_R_SYM(r->r_info));
-		break;
-	case R_ARM_PC24:
+	/* case R_ARM_ABS32: */
+	/* 	/1* From ARM ABI: (S + A) | T *1/ */
+	/* 	r->r_addend = (int)(long) */
+	/* 		      (elf->symtab_start + ELF_R_SYM(r->r_info)); */
+	/* 	break; */
+	/* case R_ARM_PC24: */
 	case R_ARM_CALL:
 	case R_ARM_JUMP24:
 	case R_ARM_THM_CALL:
@@ -1811,24 +1811,24 @@ static int addend_arm_rel(struct elf_info *elf, Elf_Shdr *sechdr, Elf_Rela *r)
 
 static int addend_mips_rel(struct elf_info *elf, Elf_Shdr *sechdr, Elf_Rela *r)
 {
-	unsigned int r_typ = ELF_R_TYPE(r->r_info);
+	/* unsigned int r_typ = ELF_R_TYPE(r->r_info); */
 	unsigned int *location = reloc_location(elf, sechdr, r);
 	unsigned int inst;
 
-	if (r_typ == R_MIPS_HI16)
-		return 1;	/* skip this */
+	/* if (r_typ == R_MIPS_HI16) */
+	/* 	return 1;	/1* skip this *1/ */
 	inst = TO_NATIVE(*location);
-	switch (r_typ) {
-	case R_MIPS_LO16:
-		r->r_addend = inst & 0xffff;
-		break;
-	case R_MIPS_26:
-		r->r_addend = (inst & 0x03ffffff) << 2;
-		break;
-	case R_MIPS_32:
-		r->r_addend = inst;
-		break;
-	}
+	/* switch (r_typ) { */
+	/* case R_MIPS_LO16: */
+	/* 	r->r_addend = inst & 0xffff; */
+	/* 	break; */
+	/* case R_MIPS_26: */
+	/* 	r->r_addend = (inst & 0x03ffffff) << 2; */
+	/* 	break; */
+	/* case R_MIPS_32: */
+	/* 	r->r_addend = inst; */
+	/* 	break; */
+	/* } */
 	return 0;
 }
 

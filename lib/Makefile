@@ -3,10 +3,10 @@
 # Makefile for some libs needed in the kernel.
 #
 
-ifdef CONFIG_FUNCTION_TRACER
 ORIG_CFLAGS := $(KBUILD_CFLAGS)
-KBUILD_CFLAGS = $(subst $(CC_FLAGS_FTRACE),,$(ORIG_CFLAGS))
-endif
+KBUILD_CFLAGS_TRACER-$(CONFIG_FUNCTION_TRACER) := \
+	$(subst $(CC_FLAGS_FTRACE),,$(ORIG_CFLAGS))
+KBUILD_CLFAGS = ${KBUILD_CFLAGS_TRACER-y}
 
 # These files are disabled because they produce lots of non-interesting and/or
 # flaky coverage that is not a function of syscall inputs. For example,
@@ -19,11 +19,10 @@ KCOV_INSTRUMENT_dynamic_debug.o := n
 KCOV_INSTRUMENT_fault-inject.o := n
 
 # Early boot use of cmdline, don't instrument it
-ifdef CONFIG_AMD_MEM_ENCRYPT
-KASAN_SANITIZE_string.o := n
-
-CFLAGS_string.o := $(call cc-option, -fno-stack-protector)
-endif
+CFLAGS_string_enc-$(CONFIG_AMD_MEM_ENCRYPT) := $(call cc-option, -fno-stack-protector)
+string_enc-$(CONFIG_AMD_MEM_ENCRYPT) := n
+KASAN_SANITIZE_string.o := ${string_enc-y}
+CFLAGS_string.o := $(CFLAGS_string_enc-y)
 
 # Used by KCSAN while enabled, avoid recursion.
 KCSAN_SANITIZE_random32.o := n
@@ -103,10 +102,9 @@ obj-$(CONFIG_TEST_LIVEPATCH) += livepatch/
 
 obj-$(CONFIG_KUNIT) += kunit/
 
-ifeq ($(CONFIG_DEBUG_KOBJECT),y)
-CFLAGS_kobject.o += -DDEBUG
-CFLAGS_kobject_uevent.o += -DDEBUG
-endif
+debug_kobj-$(CONFIG_DEBUG_KOBJECT) := -DDEBUG
+CFLAGS_kobject.o += ${debug_kobj-y}
+CFLAGS_kobject_uevent.o += ${debug_kobj-y}
 
 obj-$(CONFIG_DEBUG_INFO_REDUCED) += debug_info.o
 CFLAGS_debug_info.o += $(call cc-option, -femit-struct-debug-detailed=any)
@@ -240,8 +238,8 @@ KCOV_INSTRUMENT_stackdepot.o := n
 
 libfdt_files = fdt.o fdt_ro.o fdt_wip.o fdt_rw.o fdt_sw.o fdt_strerror.o \
 	       fdt_empty_tree.o fdt_addresses.o
-$(foreach file, $(libfdt_files), \
-	$(eval CFLAGS_$(file) = -I $(srctree)/scripts/dtc/libfdt))
+# $(foreach file, $(libfdt_files), \
+# 	$(eval CFLAGS_$(file) = -I $(srctree)/scripts/dtc/libfdt))
 lib-$(CONFIG_LIBFDT) += $(libfdt_files)
 
 lib-$(CONFIG_BOOT_CONFIG) += bootconfig.o
@@ -293,9 +291,8 @@ quiet_cmd_build_OID_registry = GEN     $@
 clean-files	+= oid_registry_data.c
 
 obj-$(CONFIG_UCS2_STRING) += ucs2_string.o
-ifneq ($(CONFIG_UBSAN_TRAP),y)
-obj-$(CONFIG_UBSAN) += ubsan.o
-endif
+ubsan-${CONFIG_UBSAN_TRAP} := ubsan.o
+obj-$(CONFIG_UBSAN) += ${ubsan-y}
 
 UBSAN_SANITIZE_ubsan.o := n
 KASAN_SANITIZE_ubsan.o := n
@@ -318,3 +315,4 @@ obj-$(CONFIG_OBJAGG) += objagg.o
 # KUnit tests
 obj-$(CONFIG_LIST_KUNIT_TEST) += list-test.o
 obj-$(CONFIG_LINEAR_RANGES_TEST) += test_linear_ranges.o
+ccflags-y += -Wno-strict-prototypes

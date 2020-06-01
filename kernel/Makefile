@@ -15,10 +15,8 @@ obj-y     = fork.o exec_domain.o panic.o \
 obj-$(CONFIG_MODULES) += kmod.o
 obj-$(CONFIG_MULTIUSER) += groups.o
 
-ifdef CONFIG_FUNCTION_TRACER
-# Do not trace internal ftrace files
-CFLAGS_REMOVE_irq_work.o = $(CC_FLAGS_FTRACE)
-endif
+CFLAGS_REMOVE_irq_work-$(CONFIG_FUNCTION_TRACER) = $(CC_FLAGS_FTRACE)
+CFLAGS_REMOVE_irq_work.o = $(CFLAGS_REMOVE_irq_work-y)
 
 # Prevents flicker of uninteresting __do_softirq()/__local_bh_disable_ip()
 # in coverage traces.
@@ -35,7 +33,7 @@ KCOV_INSTRUMENT_stacktrace.o := n
 KCOV_INSTRUMENT_kcov.o := n
 KASAN_SANITIZE_kcov.o := n
 KCSAN_SANITIZE_kcov.o := n
-CFLAGS_kcov.o := $(call cc-option, -fno-conserve-stack -fno-stack-protector)
+# CFLAGS_kcov.o := $(call cc-option, -fno-conserve-stack -fno-stack-protector)
 
 # cond_syscall is currently not LTO compatible
 CFLAGS_sys_ni.o = $(DISABLE_LTO)
@@ -57,9 +55,8 @@ obj-y += time/
 obj-$(CONFIG_FUTEX) += futex.o
 obj-$(CONFIG_GENERIC_ISA_DMA) += dma.o
 obj-$(CONFIG_SMP) += smp.o
-ifneq ($(CONFIG_SMP),y)
-obj-y += up.o
-endif
+up-${CONFIG_SMP} := up.o
+obj-y += ${up-y}
 obj-$(CONFIG_UID16) += uid16.o
 obj-$(CONFIG_MODULES) += module.o
 obj-$(CONFIG_MODULE_SIG) += module_signing.o
@@ -134,13 +131,14 @@ $(obj)/configs.o: $(obj)/config_data.gz
 
 targets += config_data.gz
 $(obj)/config_data.gz: $(KCONFIG_CONFIG) FORCE
-	$(call if_changed,gzip)
+	# $(call if_changed,gzip)
 
 $(obj)/kheaders.o: $(obj)/kheaders_data.tar.xz
 
 quiet_cmd_genikh = CHK     $(obj)/kheaders_data.tar.xz
       cmd_genikh = $(CONFIG_SHELL) $(srctree)/kernel/gen_kheaders.sh $@
 $(obj)/kheaders_data.tar.xz: FORCE
-	$(call cmd,genikh)
+	# $(call cmd,genikh)
 
 clean-files := kheaders_data.tar.xz kheaders.md5
+ccflags-y += -Wno-strict-prototypes

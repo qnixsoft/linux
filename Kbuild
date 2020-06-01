@@ -18,7 +18,7 @@ $(bounds-file): kernel/bounds.s FORCE
 
 timeconst-file := include/generated/timeconst.h
 
-filechk_gentimeconst = echo $(CONFIG_HZ) | bc -q $<
+filechk_gentimeconst = echo $(CONFIG_HZ) | gbc -q $<
 
 $(timeconst-file): kernel/time/timeconst.bc FORCE
 	$(call filechk,gentimeconst)

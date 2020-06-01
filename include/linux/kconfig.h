@@ -6,6 +6,10 @@
 
 #include <generated/autoconf.h>
 
+#ifdef CONFIG_WASM
+#define __builtin_return_address(n) n
+#endif
+
 #ifdef CONFIG_CPU_BIG_ENDIAN
 #define __BIG_ENDIAN 4321
 #else

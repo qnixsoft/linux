@@ -43,16 +43,40 @@ info()
 # ${1} output file
 modpost_link()
 {
-	local objects
+	if [[ ${SRCARCH} == "wasm" ]]; then
+		metal-ar faster built-in.a \
+			${KBUILD_VMLINUX_OBJS} \
+			${KBUILD_VMLINUX_LIBS}
 
-	objects="--whole-archive				\
-		${KBUILD_VMLINUX_OBJS}				\
-		--no-whole-archive				\
-		--start-group					\
-		${KBUILD_VMLINUX_LIBS}				\
-		--end-group"
+		echo ${LD} \
+			--export __syscall0 --export __syscall1 \
+			--export __syscall2 --export __syscall3 \
+			--export __syscall4 --export __syscall5 \
+			--export __syscall6 -o vmlinux.wasm \
+			--allow-undefined-file=wasm.syms \
+			-e start_kernel \
+			-whole-archive built-in.a
+		${LD} \
+			--export __syscall0 --export __syscall1 \
+			--export __syscall2 --export __syscall3 \
+			--export __syscall4 --export __syscall5 \
+			--export __syscall6 -o vmlinux.wasm \
+			--allow-undefined-file=wasm.syms \
+			-e start_kernel \
+			-whole-archive built-in.a
+	else
+		local objects
+		echo MODPOST_LINK
 
-	${LD} ${KBUILD_LDFLAGS} -r -o ${1} ${objects}
+		objects="--whole-archive				\
+			${KBUILD_VMLINUX_OBJS}				\
+			--no-whole-archive				\
+			--start-group					\
+			${KBUILD_VMLINUX_LIBS}				\
+			--end-group"
+
+		${LD} ${KBUILD_LDFLAGS} -r -o ${1} ${objects}
+	fi
 }
 
 objtool_link()
@@ -98,20 +122,7 @@ vmlinux_link()
 		strip_debug=-Wl,--strip-debug
 	fi
 
-	if [ "${SRCARCH}" != "um" ]; then
-		objects="--whole-archive			\
-			${KBUILD_VMLINUX_OBJS}			\
-			--no-whole-archive			\
-			--start-group				\
-			${KBUILD_VMLINUX_LIBS}			\
-			--end-group				\
-			${@}"
-
-		${LD} ${KBUILD_LDFLAGS} ${LDFLAGS_vmlinux}	\
-			${strip_debug#-Wl,}			\
-			-o ${output}				\
-			-T ${lds} ${objects}
-	else
+	if [ "${SRCARCH}" == "um" ]; then
 		objects="-Wl,--whole-archive			\
 			${KBUILD_VMLINUX_OBJS}			\
 			-Wl,--no-whole-archive			\
@@ -127,6 +138,20 @@ vmlinux_link()
 			${objects}				\
 			-lutil -lrt -lpthread
 		rm -f linux
+	else
+		echo OTHERLINK
+		objects="--whole-archive			\
+			${KBUILD_VMLINUX_OBJS}			\
+			--no-whole-archive			\
+			--start-group				\
+			${KBUILD_VMLINUX_LIBS}			\
+			--end-group				\
+			${@}"
+
+		${LD} ${KBUILD_LDFLAGS} ${LDFLAGS_vmlinux}	\
+			${strip_debug#-Wl,}			\
+			-o ${output}				\
+			-T ${lds} ${objects}
 	fi
 }
 
@@ -276,6 +301,12 @@ objtool_link vmlinux.o
 
 # modpost vmlinux.o to check for section mismatches
 ${MAKE} -f "${srctree}/scripts/Makefile.modpost" MODPOST_VMLINUX=1
+
+if [[ ${SRCARCH} == "wasm" ]]; then
+	wasm2js -Oz --enable-reference-types --enable-mutable-globals vmlinux.wasm > vmlinux.js
+	gcc -E -P -nostdinc -undef -x c -o metal.js metal.hjs
+	exit
+fi
 
 info MODINFO modules.builtin.modinfo
 ${OBJCOPY} -j .modinfo -O binary vmlinux.o modules.builtin.modinfo

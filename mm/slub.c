@@ -2396,7 +2396,9 @@ static bool has_cpu_slab(int cpu, void *info)
 
 static void flush_all(struct kmem_cache *s)
 {
+#ifdef CONFIG_SMP
 	on_each_cpu_cond(has_cpu_slab, flush_cpu_slab, s, 1);
+#endif
 }
 
 /*

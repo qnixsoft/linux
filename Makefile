@@ -261,7 +261,7 @@ old_version_h := include/linux/version.h
 
 clean-targets := %clean mrproper cleandocs
 no-dot-config-targets := $(clean-targets) \
-			 cscope gtags TAGS tags help% %docs check% coccicheck \
+			 cscope gtags TAGS tags ectags help% %docs check% coccicheck \
 			 $(version_h) headers headers_% archheaders archscripts \
 			 %asm-generic kernelversion %src-pkg dt_binding_check \
 			 outputmakefile
@@ -887,7 +887,7 @@ export CC_FLAGS_SCS
 endif
 
 # arch Makefile may override CC so keep this after arch Makefile is included
-NOSTDINC_FLAGS += -nostdinc -isystem $(shell $(CC) -print-file-name=include)
+# NOSTDINC_FLAGS += -nostdinc # -isystem $(shell $(CC) -print-file-name=include)
 
 # warn about C99 declaration after statement
 KBUILD_CFLAGS += -Wdeclaration-after-statement
@@ -1445,7 +1445,7 @@ MRPROPER_FILES += include/config include/generated          \
 		  *.spec
 
 # Directories & files removed with 'make distclean'
-DISTCLEAN_FILES += tags TAGS cscope* GPATH GTAGS GRTAGS GSYMS
+DISTCLEAN_FILES += tags TAGS ectags cscope* GPATH GTAGS GRTAGS GSYMS
 
 # clean - Delete most, but leave enough to build external modules
 #
@@ -1526,7 +1526,7 @@ help:
 	@echo  '                    (requires a recent binutils and recent build (System.map))'
 	@echo  '  dir/file.ko     - Build module including final link'
 	@echo  '  modules_prepare - Set up for building external modules'
-	@echo  '  tags/TAGS	  - Generate tags file for editors'
+	@echo  '  tags/TAGS/ectags - Generate tags file for editors'
 	@echo  '  cscope	  - Generate cscope index'
 	@echo  '  gtags           - Generate GNU GLOBAL index'
 	@echo  '  kernelrelease	  - Output the release version string (use with make -s)'
@@ -1784,7 +1784,7 @@ clean: $(clean-dirs)
 quiet_cmd_tags = GEN     $@
       cmd_tags = $(BASH) $(srctree)/scripts/tags.sh $@
 
-tags TAGS cscope gtags: FORCE
+tags TAGS cscope gtags ectags: FORCE
 	$(call cmd,tags)
 
 # Script to generate missing namespace dependencies
@@ -1876,6 +1876,12 @@ endif # need-sub-make
 
 PHONY += FORCE
 FORCE:
+
+install-wasm:
+	mkdir -p ${INSTALL_BINDIR}
+	${INSTALL} metal.js ${INSTALL_BINDIR}
+
+install: install-${ARCH}
 
 # Declare the contents of the PHONY variable as phony.  We keep that
 # information in a variable so we can use it in if_changed and friends.

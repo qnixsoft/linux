@@ -27,9 +27,9 @@ $(obj)/defkeymap.o:  $(obj)/defkeymap.c
 # versions.
 # GENERATE_KEYMAP := 1
 
-ifdef GENERATE_KEYMAP
+# ifdef GENERATE_KEYMAP
 
-$(obj)/defkeymap.c: $(obj)/%.c: $(src)/%.map
-	loadkeys --mktable $< > $@
+# $(obj)/defkeymap.c: $(obj)/%.c: $(src)/%.map
+# 	loadkeys --mktable $< > $@
 
-endif
+# endif

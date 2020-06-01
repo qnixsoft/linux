@@ -33,6 +33,7 @@
 *.lzo
 *.mod
 *.mod.c
+*.d
 *.o
 *.o.*
 *.patch
@@ -54,7 +55,7 @@ modules.order
 /tags
 /TAGS
 /linux
-/vmlinux
+/vmlinux*
 /vmlinux.32
 /vmlinux.symvers
 /vmlinux-gdb.py
@@ -63,6 +64,7 @@ modules.order
 /Module.markers
 /modules.builtin.modinfo
 /modules.nsdeps
+/*.js
 
 #
 # RPM spec file (make rpm-pkg)

@@ -31,7 +31,4 @@ obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
 # ARM64 and use internal ifdefs to only build the pieces we need
 # depending on whether ACPI, the DT driver, or both are enabled.
 
-ifdef CONFIG_PCI
-obj-$(CONFIG_ARM64) += pcie-al.o
-obj-$(CONFIG_ARM64) += pcie-hisi.o
-endif
+obj-$(CONFIG_ARM64) += ${CONFIG_PCI:y=pcie-al.o pcie-hisi.o}

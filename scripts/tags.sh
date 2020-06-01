@@ -326,6 +326,13 @@ case "$1" in
 		xtags etags
 		remove_structs=y
 		;;
+
+	"ectags")
+		rm -f ectags
+		xtags ectags
+		remove_structs=y
+		;;
+
 esac
 
 # Remove structure forward declarations.

@@ -44,21 +44,12 @@ obj-$(CONFIG_MFD_ARIZONA)	+= arizona-core.o
 obj-$(CONFIG_MFD_ARIZONA)	+= arizona-irq.o
 obj-$(CONFIG_MFD_ARIZONA_I2C)	+= arizona-i2c.o
 obj-$(CONFIG_MFD_ARIZONA_SPI)	+= arizona-spi.o
-ifeq ($(CONFIG_MFD_WM5102),y)
-obj-$(CONFIG_MFD_ARIZONA)	+= wm5102-tables.o
-endif
-ifeq ($(CONFIG_MFD_WM5110),y)
-obj-$(CONFIG_MFD_ARIZONA)	+= wm5110-tables.o
-endif
-ifeq ($(CONFIG_MFD_WM8997),y)
-obj-$(CONFIG_MFD_ARIZONA)	+= wm8997-tables.o
-endif
-ifeq ($(CONFIG_MFD_WM8998),y)
-obj-$(CONFIG_MFD_ARIZONA)	+= wm8998-tables.o
-endif
-ifeq ($(CONFIG_MFD_CS47L24),y)
-obj-$(CONFIG_MFD_ARIZONA)	+= cs47l24-tables.o
-endif
+arizona-${CONFIG_MFD_WM5102}	+= wm5102-tables.o
+arizona-${CONFIG_MFD_WM5110}	+= wm5110-tables.o
+arizona-${CONFIG_MFD_WM8997}	+= wm8997-tables.o
+arizona-${CONFIG_MFD_WM8998}	+= wm8998-tables.o
+arizona-${CONFIG_MFD_CS47L24}	+= cs47124-tables.o
+obj-$(CONFIG_MFD_ARIZONA)	+= ${arizona-y}
 obj-$(CONFIG_MFD_WCD934X)	+= wcd934x.o
 obj-$(CONFIG_MFD_WM8400)	+= wm8400-core.o
 wm831x-objs			:= wm831x-core.o wm831x-irq.o wm831x-otp.o
@@ -75,21 +66,11 @@ obj-$(CONFIG_MFD_WM8994)	+= wm8994.o
 obj-$(CONFIG_MFD_WM97xx)	+= wm97xx-core.o
 
 madera-objs			:= madera-core.o
-ifeq ($(CONFIG_MFD_CS47L15),y)
-madera-objs			+= cs47l15-tables.o
-endif
-ifeq ($(CONFIG_MFD_CS47L35),y)
-madera-objs			+= cs47l35-tables.o
-endif
-ifeq ($(CONFIG_MFD_CS47L85),y)
-madera-objs			+= cs47l85-tables.o
-endif
-ifeq ($(CONFIG_MFD_CS47L90),y)
-madera-objs			+= cs47l90-tables.o
-endif
-ifeq ($(CONFIG_MFD_CS47L92),y)
-madera-objs			+= cs47l92-tables.o
-endif
+madera-$(CONFIG_MFD_CS47L35) := cs47l35-tables.o
+madera-$(CONFIG_MFD_CS47L85) := cs47l85-tables.o
+madera-$(CONFIG_MFD_CS47L90) := cs47l90-tables.o
+madera-$(CONFIG_MFD_CS47L92) := cs47l92-tables.o
+madera-objs			+= ${madera-y}
 obj-$(CONFIG_MFD_MADERA)	+= madera.o
 obj-$(CONFIG_MFD_MADERA_I2C)	+= madera-i2c.o
 obj-$(CONFIG_MFD_MADERA_SPI)	+= madera-spi.o
@@ -130,9 +111,7 @@ obj-$(CONFIG_MCP_UCB1200)	+= ucb1x00-core.o
 obj-$(CONFIG_MFD_SMSC)        += smsc-ece1099.o
 obj-$(CONFIG_MCP_UCB1200_TS)	+= ucb1x00-ts.o
 
-ifeq ($(CONFIG_SA1100_ASSABET),y)
-obj-$(CONFIG_MCP_UCB1200)	+= ucb1x00-assabet.o
-endif
+obj-$(CONFIG_MCP_UCB1200)	+= ${CONFIG_SA1100_ASSABET:y=ucb1x00-assabet.o}
 obj-$(CONFIG_UCB1400_CORE)	+= ucb1400_core.o
 
 obj-$(CONFIG_PMIC_DA903X)	+= da903x.o
