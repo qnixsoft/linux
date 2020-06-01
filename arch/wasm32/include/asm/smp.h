@@ -1,0 +1,1 @@
+../../../arc/include/asm/smp.h

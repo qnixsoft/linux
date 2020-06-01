@@ -3,7 +3,7 @@
 
 srcdir=${PWD}
 linux-srcdir=${HOME}/linux
-include ../wasm.mk
+include wasm.mk
 include scripts/Makefile.common
 
 WASMBROWSER?=chrome
