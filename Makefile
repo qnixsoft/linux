@@ -2,11 +2,6 @@
 # .POSIX:
 
 srcdir=${PWD}
-linux-srcdir=${HOME}/linux
-include wasm.mk
-include scripts/Makefile.common
-
-WASMBROWSER?=chrome
 
 init-y			:= init/
 drivers-y		:= drivers/
@@ -15,7 +10,7 @@ core-y			:=
 core-y			+= kernel/ mm/ fs/ security/
 dummy-dirs := fs/exofs
 
-include arch/${ARCH}/Makefile
+include scripts/Makefile.common
 
 vmlinux-dirs		:= ${init-y} ${drivers-y} ${libs-y} ${core-y}
 vmlinux-dep		:= ${vmlinux-dirs:%/=%-dep}
@@ -101,11 +96,5 @@ install: all
 tags:
 	${Q2}${CTAGS} `find ${vmlinux-dirs} include arch/${ARCH}/include \
 	    -name '*.c' -or -name '*.h'`
-
-relink: broken
-	cat broken | while read file ; do ln -fs ${linux-srcdir}/$$file ./$$file ; done
-
-broken:
-	find . -type l -exec file {} \; | grep broken | sed -e 's/^.\///' -e 's/:.*//' >$@
 
 .PHONY: run install tags debug relink

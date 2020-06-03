@@ -1,3 +1,6 @@
+include ${srcdir}/scripts/.config
+include ${srcdir}/arch/${ARCH}/Makefile
+
 ARCHDIR=arch/${ARCH}
 
 HDR_DIRS=${ARCHDIR}/include ${ARCHDIR}/include/uapi include include/uapi
