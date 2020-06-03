@@ -32,7 +32,7 @@ KBUILD_VMLINUX_LIBS := ${libs-y1}
 vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN) \
 	$(KBUILD_VMLINUX_LIBS)
 
-all: ${dummy-dirs} prepare ${vmlinux-dirs} metal.wasm
+all: ${dummy-dirs} prepare ${vmlinux-dirs} vmlinux
 
 $(dummy-dirs):
 	mkdir -p $@
@@ -40,7 +40,7 @@ $(dummy-dirs):
 LINK.o += --export __syscall0 --export __syscall1 --export __syscall2 --export __syscall3 \
 	--export __syscall4 --export __syscall5 --export __syscall6
 
-metal.wasm: built-in.a
+vmlinux: built-in.a
 	${LINK.o} -o $@ ${LDLIBS} -e start_kernel -whole-archive built-in.a
 
 built-in.a: $(vmlinux-deps)
@@ -68,7 +68,7 @@ $(autoconf): ${config} extra-conf.h
 .PHONY: all prepare
 
 clean: ${vmlinux-clean}
-	${Q2}rm metal.wasm *.a 2>/dev/null || true
+	${Q2}rm vmlinux *.a 2>/dev/null || true
 
 $(vmlinux-clean):
 	${Q2}${MAKE} -C ${@:%-clean=%} ${MAKEFLAGS} clean
@@ -90,7 +90,7 @@ $(vmlinux-cleandep):
 .PHONY: cleandep ${vmlinux-cleandep}
 
 install: all
-	${Q2}cp metal.wasm ${DESTDIR}/bin
+	${Q2}cp vmlinux ${DESTDIR}/bin
 
 # naive approach for now.
 tags:
