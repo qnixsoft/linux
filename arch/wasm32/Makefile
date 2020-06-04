@@ -7,4 +7,6 @@ core-y	+= arch/wasm32/kernel/
 libs-y	+= arch/wasm32/lib/
 core-y	+= arch/wasm32/mm/
 
+DESTDIR := ${DESTDIR}/metal
+
 include /usr/local/mk/wasm.mk
