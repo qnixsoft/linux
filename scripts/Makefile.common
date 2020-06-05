@@ -17,7 +17,9 @@ Q2=
 COMPILE.c := ${Q2}${COMPILE.c}
 LINK.o := ${Q2}${LD} ${LDFLAGS}
 
-MAKEFLAGS := srcdir=${srcdir} -I${srcdir}/scripts -f Makefile.build
+MAKEFLAGS := MKDIR=${MKDIR} \
+	srcdir=${srcdir} -I${srcdir}/scripts \
+	-f Makefile.build
 
 all:
 FORCE:
