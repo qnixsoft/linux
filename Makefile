@@ -90,7 +90,8 @@ $(vmlinux-cleandep):
 .PHONY: cleandep ${vmlinux-cleandep}
 
 install: all
-	${Q2}cp vmlinux ${DESTDIR}/bin
+	mkdir -p ${INSTALL_BINDIR}
+	${INSTALL} vmlinux ${INSTALL_BINDIR}
 
 # naive approach for now.
 tags:
