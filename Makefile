@@ -32,13 +32,26 @@ KBUILD_VMLINUX_LIBS := ${libs-y1}
 vmlinux-deps := $(KBUILD_LDS) $(KBUILD_VMLINUX_INIT) $(KBUILD_VMLINUX_MAIN) \
 	$(KBUILD_VMLINUX_LIBS)
 
-all: ${dummy-dirs} prepare ${vmlinux-dirs} vmlinux
+main-wasm32 := metal.js
+
+all: ${dummy-dirs} prepare ${vmlinux-dirs} ${main-${ARCH}}
 
 $(dummy-dirs):
 	mkdir -p $@
 
 LINK.o += --export __syscall0 --export __syscall1 --export __syscall2 --export __syscall3 \
 	--export __syscall4 --export __syscall5 --export __syscall6
+
+DESTDIR ?= /
+PREFIX ?= ${DESTDIR}/usr/local
+MKDIR ?= ${PREFIX}/mk
+include ${MKDIR}/hjs.mk
+
+metal.js: vmlinux.js
+	${GCC_JS} -o $@ metal.hjs
+
+vmlinux.js: vmlinux
+	${WASM2JS} vmlinux > $@
 
 vmlinux: built-in.a
 	${LINK.o} -o $@ ${LDLIBS} -e start_kernel -whole-archive built-in.a
@@ -91,7 +104,7 @@ $(vmlinux-cleandep):
 
 install: all
 	mkdir -p ${INSTALL_BINDIR}
-	${INSTALL} vmlinux ${INSTALL_BINDIR}
+	${INSTALL} ${main-${ARCH}} ${INSTALL_BINDIR}
 
 # naive approach for now.
 tags:

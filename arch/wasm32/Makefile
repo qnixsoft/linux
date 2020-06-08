@@ -7,5 +7,7 @@ core-y	+= arch/wasm32/kernel/
 libs-y	+= arch/wasm32/lib/
 core-y	+= arch/wasm32/mm/
 
+DESTDIR ?= /
+PREFIX ?= ${DESTDIR}/usr/local
 MKDIR ?= ${PREFIX}/mk
 include ${MKDIR}/wasm.mk

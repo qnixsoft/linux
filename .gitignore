@@ -57,6 +57,7 @@ modules.builtin
 /vmlinuz
 /System.map
 /Module.markers
+/*.js
 
 #
 # RPM spec file (make rpm-pkg)
