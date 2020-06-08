@@ -42,18 +42,12 @@ $(dummy-dirs):
 LINK.o += --export __syscall0 --export __syscall1 --export __syscall2 --export __syscall3 \
 	--export __syscall4 --export __syscall5 --export __syscall6
 
-DESTDIR ?= /
-PREFIX ?= ${DESTDIR}/usr/local
-MKDIR ?= ${PREFIX}/mk
-include ${MKDIR}/hjs.mk
+-include ${srcdir}/../mk/hjs.mk
 
 metal.js: vmlinux.js
 	${GCC_JS} -o $@ metal.hjs
 
-vmlinux.js: vmlinux
-	${WASM2JS} vmlinux > $@
-
-vmlinux: built-in.a
+vmlinux.wasm: built-in.a
 	${LINK.o} -o $@ ${LDLIBS} -e start_kernel -whole-archive built-in.a
 
 built-in.a: $(vmlinux-deps)
@@ -81,7 +75,7 @@ $(autoconf): ${config} extra-conf.h
 .PHONY: all prepare
 
 clean: ${vmlinux-clean}
-	${Q2}rm vmlinux *.a 2>/dev/null || true
+	${Q2}rm vmlinux* *.a 2>/dev/null || true
 
 $(vmlinux-clean):
 	${Q2}${MAKE} -C ${@:%-clean=%} ${MAKEFLAGS} clean

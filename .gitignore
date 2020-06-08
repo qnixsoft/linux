@@ -51,7 +51,7 @@ modules.builtin
 /tags
 /TAGS
 /linux
-/vmlinux
+/vmlinux*
 /vmlinux.32
 /vmlinux-gdb.py
 /vmlinuz
