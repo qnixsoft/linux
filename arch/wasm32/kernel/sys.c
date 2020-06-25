@@ -1,9 +1,13 @@
 /* #include <linux/unistd.h> */
+/* #include <syscall.h> */
 #include <asm/syscall.h>
+#include <asm/syscalls.h>
+#include <linux/syscalls.h>
 #include <asm/linkage.h> /* __wasm_export */
 #include <asm/ar.h>
 #include <asm/syscall_wrapper.h>
 #include <linux/printk.h>
+#include <linux/mm.h>
 
 #define AR_FB(ar, ...) AR_FB##ar(__VA_ARGS__)
 #define AR_FB0()
@@ -36,11 +40,8 @@
 
 #include <uapi/linux/uio.h>
 
-METAL_SYSCALL_DECLARE(3, writev, int, const struct iovec *, int);
-METAL_SYSCALL_DECLARE(3, read, int, void*, size_t);
-
 /* SYSCALL_DEBUG(1, exit, a, int, a); */
-SYSCALL_DEBUG(3, ioctl, 0, int, fd, int, req, void *, arg);
+/* SYSCALL_DEBUG(3, ioctl, 0, int, fd, int, req, void *, arg); */
 
 typedef asmlinkage long (*sys_call_ptr_t)();
 
@@ -71,3 +72,14 @@ DEFSYSCALL(3);
 DEFSYSCALL(4);
 DEFSYSCALL(5);
 DEFSYSCALL(6);
+
+SYSCALL_DEFINE6(mmap, unsigned long, addr, unsigned long, len,
+		unsigned long, prot, unsigned long, flags,
+		unsigned long, fd, off_t, off)
+{
+	if (offset_in_page(off) != 0)
+		return -EINVAL;
+
+	return ksys_mmap_pgoff(addr, len, prot, flags, fd, off >> PAGE_SHIFT);
+}
+

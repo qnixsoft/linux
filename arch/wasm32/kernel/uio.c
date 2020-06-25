@@ -38,7 +38,9 @@ struct file_operations fops0 = {
 long
 uio_init(void)
 {
-	struct dentry *f0_blob = debugfs_create_blob("0", 0x222, NULL, &f0_bw);
+	struct dentry *d = debugfs_create_dir("dev", NULL);
+	struct dentry *f = debugfs_create_file("0", 0x222, d, data, &fops0);
+	/* struct file f0 = debugfs_create_file("0", 0x600, NULL, data, fops0); */
 	//struct file f0 = debugfs_create_file("0", 0x600, NULL, data, fops0);
 	//struct file f1 = debugfs_create_file("1", 0x600, NULL, data, fops1);
 	return 0;
@@ -62,14 +64,14 @@ read0_evt(char *buf, unsigned long len)
 	return ret;
 }
 
-long
-read(int fd, void *buf, unsigned long len)
-{
-        switch (fd) {
-        case 0: return read0_evt(buf, len);
-        default: return -EBADF;
-        }
-}
+/* long */
+/* read(int fd, void *buf, unsigned long len) */
+/* { */
+/*         switch (fd) { */
+/*         case 0: return read0_evt(buf, len); */
+/*         default: return -EBADF; */
+/*         } */
+/* } */
 
 void flush(char *, unsigned long);
 

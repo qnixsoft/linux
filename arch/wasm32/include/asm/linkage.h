@@ -4,8 +4,8 @@
 
 #include <linux/stringify.h>
 
-#undef notrace
-#define notrace __attribute__((no_instrument_function))
+/* #undef notrace */
+/* #define notrace __attribute__((no_instrument_function)) */
 
 /* #ifdef CONFIG_WASM_32 */
 /* #define asmlinkage CPP_ASMLINKAGE __attribute__((regparm(0))) */

@@ -3,10 +3,4 @@
 
 #include <asm-generic/signal.h>
 
-/* static inline int sigismember(sigset_t *set, int _sig) { */
-/* 	return -1; */
-/* } */
-
-/* static void __set_current_blocked(sigset_t *sigmask) {} */
-
 #endif
