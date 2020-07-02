@@ -77,8 +77,8 @@ void __init setup_arch_memory(void)
 	init_mm.end_data = (unsigned long)_edata;
 	init_mm.brk = (unsigned long)_end;
 
-	pr_err("'setup_arch_memory' %s: Implement me properly\n"
-	       "start_code: %lu\nend_code: %lu\nend_data: %lu\nbrk: %lu\n", __func__,
+	pr_err("setup_arch_memory Implement me properly\n"
+	       "start_code: %lu\nend_code: %lu\nend_data: %lu\nbrk: %lu\n",
 	       init_mm.start_code,
 	       init_mm.end_code,
 	       init_mm.end_data,
@@ -143,7 +143,7 @@ void __init setup_arch_memory(void)
  */
 void __init mem_init(void)
 {
-	pr_err("mem_init %s.\n", __func__);
+	pr_err("mem_init\n");
 	memblock_free_all();
 	mem_init_print_info(NULL);
 }

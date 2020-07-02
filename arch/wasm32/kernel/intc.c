@@ -25,7 +25,7 @@
  */
 void arc_init_IRQ(void)
 {
-	pr_err("%s: Implement me.\n", __func__);
+	pr_err("arc_init_IRQ\n");
 }
 
 /*
@@ -41,12 +41,12 @@ void arc_init_IRQ(void)
 
 static void arc_irq_mask(struct irq_data *data)
 {
-	panic("%s: Not implemented\n", __func__);
+	panic("arc_irq_mask\n");
 }
 
 static void arc_irq_unmask(struct irq_data *data)
 {
-	panic("%s: Not implemented\n", __func__);
+	panic("arc_irq_unmask\n");
 }
 
 static struct irq_chip onchip_intc = {
@@ -58,7 +58,7 @@ static struct irq_chip onchip_intc = {
 static int __init
 init_onchip_IRQ(struct device_node *intc, struct device_node *parent)
 {
-	panic("%s: Not implemented\n", __func__);
+	panic("init_onchip_IRQ\n");
 	return 0;
 }
 

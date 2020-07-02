@@ -21,10 +21,6 @@
 #include <asm/cachectl.h>
 #include <asm/setup.h>
 
-#ifdef CONFIG_ISA_ARCV2
-#define USE_RGN_FLSH	1
-#endif
-
 static int l2_line_sz;
 static int ioc_exists;
 int slc_enable = 1, ioc_enable = 1;
@@ -322,8 +318,6 @@ void __cache_line_loop_v3(phys_addr_t paddr, unsigned long vaddr,
 	 *   - (and needs to be written before the lower 32 bits)
 	 * Note that PTAG_HI is hoisted outside the line loop
 	 */
-	if (is_pae40_enabled() && op == OP_INV_IC)
-		write_aux_reg(ARC_REG_IC_PTAG_HI, (u64)paddr >> 32);
 
 	while (num_lines-- > 0) {
 		if (!full_page) {
@@ -377,22 +371,6 @@ void __cache_line_loop_v4(phys_addr_t paddr, unsigned long vaddr,
 	}
 
 	num_lines = DIV_ROUND_UP(sz, L1_CACHE_BYTES);
-
-	/*
-	 * For HS38 PAE40 configuration
-	 *   - upper 8 bits of paddr need to be written into PTAG_HI
-	 *   - (and needs to be written before the lower 32 bits)
-	 */
-	if (is_pae40_enabled()) {
-		if (op == OP_INV_IC)
-			/*
-			 * Non aliasing I-cache in HS38,
-			 * aliasing I-cache handled in __cache_line_loop_v3()
-			 */
-			write_aux_reg(ARC_REG_IC_PTAG_HI, (u64)paddr >> 32);
-		else
-			write_aux_reg(ARC_REG_DC_PTAG_HI, (u64)paddr >> 32);
-	}
 
 	while (num_lines-- > 0) {
 		write_aux_reg(aux_cmd, paddr);
@@ -457,312 +435,22 @@ void __cache_line_loop_v4(phys_addr_t paddr, unsigned long vaddr,
 #define __cache_line_loop	__cache_line_loop_v4
 #endif
 
-#ifdef CONFIG_ARC_HAS_DCACHE
-
-/***************************************************************
- * Machine specific helpers for Entire D-Cache or Per Line ops
- */
-
-#ifndef USE_RGN_FLSH
-/*
- * this version avoids extra read/write of DC_CTRL for flush or invalid ops
- * in the non region flush regime (such as for ARCompact)
- */
-static inline void __before_dc_op(const int op)
-{
-	if (op == OP_FLUSH_N_INV) {
-		/* Dcache provides 2 cmd: FLUSH or INV
-		 * INV inturn has sub-modes: DISCARD or FLUSH-BEFORE
-		 * flush-n-inv is achieved by INV cmd but with IM=1
-		 * So toggle INV sub-mode depending on op request and default
-		 */
-		const unsigned int ctl = ARC_REG_DC_CTRL;
-		write_aux_reg(ctl, read_aux_reg(ctl) | DC_CTRL_INV_MODE_FLUSH);
-	}
-}
-
-#else
-
-static inline void __before_dc_op(const int op)
-{
-	const unsigned int ctl = ARC_REG_DC_CTRL;
-	unsigned int val = read_aux_reg(ctl);
-
-	if (op == OP_FLUSH_N_INV) {
-		val |= DC_CTRL_INV_MODE_FLUSH;
-	}
-
-	if (op != OP_INV_IC) {
-		/*
-		 * Flush / Invalidate is provided by DC_CTRL.RNG_OP 0 or 1
-		 * combined Flush-n-invalidate uses DC_CTRL.IM = 1 set above
-		 */
-		val &= ~DC_CTRL_RGN_OP_MSK;
-		if (op & OP_INV)
-			val |= DC_CTRL_RGN_OP_INV;
-	}
-	write_aux_reg(ctl, val);
-}
-
-#endif
-
-
-static inline void __after_dc_op(const int op)
-{
-	if (op & OP_FLUSH) {
-		const unsigned int ctl = ARC_REG_DC_CTRL;
-		unsigned int reg;
-
-		/* flush / flush-n-inv both wait */
-		while ((reg = read_aux_reg(ctl)) & DC_CTRL_FLUSH_STATUS)
-			;
-
-		/* Switch back to default Invalidate mode */
-		if (op == OP_FLUSH_N_INV)
-			write_aux_reg(ctl, reg & ~DC_CTRL_INV_MODE_FLUSH);
-	}
-}
-
-/*
- * Operation on Entire D-Cache
- * @op = {OP_INV, OP_FLUSH, OP_FLUSH_N_INV}
- * Note that constant propagation ensures all the checks are gone
- * in generated code
- */
-static inline void __dc_entire_op(const int op)
-{
-	int aux;
-
-	__before_dc_op(op);
-
-	if (op & OP_INV)	/* Inv or flush-n-inv use same cmd reg */
-		aux = ARC_REG_DC_IVDC;
-	else
-		aux = ARC_REG_DC_FLSH;
-
-	write_aux_reg(aux, 0x1);
-
-	__after_dc_op(op);
-}
-
-static inline void __dc_disable(void)
-{
-	const int r = ARC_REG_DC_CTRL;
-
-	__dc_entire_op(OP_FLUSH_N_INV);
-	write_aux_reg(r, read_aux_reg(r) | DC_CTRL_DIS);
-}
-
-static void __dc_enable(void)
-{
-	const int r = ARC_REG_DC_CTRL;
-
-	write_aux_reg(r, read_aux_reg(r) & ~DC_CTRL_DIS);
-}
-
-/* For kernel mappings cache operation: index is same as paddr */
-#define __dc_line_op_k(p, sz, op)	__dc_line_op(p, p, sz, op)
-
-/*
- * D-Cache Line ops: Per Line INV (discard or wback+discard) or FLUSH (wback)
- */
-static inline void __dc_line_op(phys_addr_t paddr, unsigned long vaddr,
-				unsigned long sz, const int op)
-{
-	const int full_page = __builtin_constant_p(sz) && sz == PAGE_SIZE;
-	unsigned long flags;
-
-	local_irq_save(flags);
-
-	__before_dc_op(op);
-
-	__cache_line_loop(paddr, vaddr, sz, op, full_page);
-
-	__after_dc_op(op);
-
-	local_irq_restore(flags);
-}
-
-#else
-
 #define __dc_entire_op(op)
 #define __dc_disable()
 #define __dc_enable()
 #define __dc_line_op(paddr, vaddr, sz, op)
 #define __dc_line_op_k(paddr, sz, op)
-
-#endif /* CONFIG_ARC_HAS_DCACHE */
-
-#ifdef CONFIG_ARC_HAS_ICACHE
-
-static inline void __ic_entire_inv(void)
-{
-	write_aux_reg(ARC_REG_IC_IVIC, 1);
-	read_aux_reg(ARC_REG_IC_CTRL);	/* blocks */
-}
-
-static inline void
-__ic_line_inv_vaddr_local(phys_addr_t paddr, unsigned long vaddr,
-			  unsigned long sz)
-{
-	const int full_page = __builtin_constant_p(sz) && sz == PAGE_SIZE;
-	unsigned long flags;
-
-	local_irq_save(flags);
-	(*_cache_line_loop_ic_fn)(paddr, vaddr, sz, OP_INV_IC, full_page);
-	local_irq_restore(flags);
-}
-
-#ifndef CONFIG_SMP
-
-#define __ic_line_inv_vaddr(p, v, s)	__ic_line_inv_vaddr_local(p, v, s)
-
-#else
-
-struct ic_inv_args {
-	phys_addr_t paddr, vaddr;
-	int sz;
-};
-
-static void __ic_line_inv_vaddr_helper(void *info)
-{
-        struct ic_inv_args *ic_inv = info;
-
-        __ic_line_inv_vaddr_local(ic_inv->paddr, ic_inv->vaddr, ic_inv->sz);
-}
-
-static void __ic_line_inv_vaddr(phys_addr_t paddr, unsigned long vaddr,
-				unsigned long sz)
-{
-	struct ic_inv_args ic_inv = {
-		.paddr = paddr,
-		.vaddr = vaddr,
-		.sz    = sz
-	};
-
-	on_each_cpu(__ic_line_inv_vaddr_helper, &ic_inv, 1);
-}
-
-#endif	/* CONFIG_SMP */
-
-#else	/* !CONFIG_ARC_HAS_ICACHE */
-
 #define __ic_entire_inv()
 #define __ic_line_inv_vaddr(pstart, vstart, sz)
 
-#endif /* CONFIG_ARC_HAS_ICACHE */
-
 noinline void slc_op_rgn(phys_addr_t paddr, unsigned long sz, const int op)
 {
-#ifdef CONFIG_ISA_ARCV2
-	/*
-	 * SLC is shared between all cores and concurrent aux operations from
-	 * multiple cores need to be serialized using a spinlock
-	 * A concurrent operation can be silently ignored and/or the old/new
-	 * operation can remain incomplete forever (lockup in SLC_CTRL_BUSY loop
-	 * below)
-	 */
-	static DEFINE_SPINLOCK(lock);
-	unsigned long flags;
-	unsigned int ctrl;
-	phys_addr_t end;
-
-	spin_lock_irqsave(&lock, flags);
-
-	/*
-	 * The Region Flush operation is specified by CTRL.RGN_OP[11..9]
-	 *  - b'000 (default) is Flush,
-	 *  - b'001 is Invalidate if CTRL.IM == 0
-	 *  - b'001 is Flush-n-Invalidate if CTRL.IM == 1
-	 */
-	ctrl = read_aux_reg(ARC_REG_SLC_CTRL);
-
-	/* Don't rely on default value of IM bit */
-	if (!(op & OP_FLUSH))		/* i.e. OP_INV */
-		ctrl &= ~SLC_CTRL_IM;	/* clear IM: Disable flush before Inv */
-	else
-		ctrl |= SLC_CTRL_IM;
-
-	if (op & OP_INV)
-		ctrl |= SLC_CTRL_RGN_OP_INV;	/* Inv or flush-n-inv */
-	else
-		ctrl &= ~SLC_CTRL_RGN_OP_INV;
-
-	write_aux_reg(ARC_REG_SLC_CTRL, ctrl);
-
-	/*
-	 * Lower bits are ignored, no need to clip
-	 * END needs to be setup before START (latter triggers the operation)
-	 * END can't be same as START, so add (l2_line_sz - 1) to sz
-	 */
-	end = paddr + sz + l2_line_sz - 1;
-	if (is_pae40_enabled())
-		write_aux_reg(ARC_REG_SLC_RGN_END1, upper_32_bits(end));
-
-	write_aux_reg(ARC_REG_SLC_RGN_END, lower_32_bits(end));
-
-	if (is_pae40_enabled())
-		write_aux_reg(ARC_REG_SLC_RGN_START1, upper_32_bits(paddr));
-
-	write_aux_reg(ARC_REG_SLC_RGN_START, lower_32_bits(paddr));
-
-	/* Make sure "busy" bit reports correct stataus, see STAR 9001165532 */
-	read_aux_reg(ARC_REG_SLC_CTRL);
-
-	while (read_aux_reg(ARC_REG_SLC_CTRL) & SLC_CTRL_BUSY);
-
-	spin_unlock_irqrestore(&lock, flags);
-#endif
+	pr_err("slc_op_rgn\n");
 }
 
 noinline void slc_op_line(phys_addr_t paddr, unsigned long sz, const int op)
 {
-#ifdef CONFIG_ISA_ARCV2
-	/*
-	 * SLC is shared between all cores and concurrent aux operations from
-	 * multiple cores need to be serialized using a spinlock
-	 * A concurrent operation can be silently ignored and/or the old/new
-	 * operation can remain incomplete forever (lockup in SLC_CTRL_BUSY loop
-	 * below)
-	 */
-	static DEFINE_SPINLOCK(lock);
-
-	const unsigned long SLC_LINE_MASK = ~(l2_line_sz - 1);
-	unsigned int ctrl, cmd;
-	unsigned long flags;
-	int num_lines;
-
-	spin_lock_irqsave(&lock, flags);
-
-	ctrl = read_aux_reg(ARC_REG_SLC_CTRL);
-
-	/* Don't rely on default value of IM bit */
-	if (!(op & OP_FLUSH))		/* i.e. OP_INV */
-		ctrl &= ~SLC_CTRL_IM;	/* clear IM: Disable flush before Inv */
-	else
-		ctrl |= SLC_CTRL_IM;
-
-	write_aux_reg(ARC_REG_SLC_CTRL, ctrl);
-
-	cmd = op & OP_INV ? ARC_AUX_SLC_IVDL : ARC_AUX_SLC_FLDL;
-
-	sz += paddr & ~SLC_LINE_MASK;
-	paddr &= SLC_LINE_MASK;
-
-	num_lines = DIV_ROUND_UP(sz, l2_line_sz);
-
-	while (num_lines-- > 0) {
-		write_aux_reg(cmd, paddr);
-		paddr += l2_line_sz;
-	}
-
-	/* Make sure "busy" bit reports correct stataus, see STAR 9001165532 */
-	read_aux_reg(ARC_REG_SLC_CTRL);
-
-	while (read_aux_reg(ARC_REG_SLC_CTRL) & SLC_CTRL_BUSY);
-
-	spin_unlock_irqrestore(&lock, flags);
-#endif
+	pr_err("slc_op_line\n");
 }
 
 #define slc_op(paddr, sz, op)	slc_op_rgn(paddr, sz, op)
@@ -1018,44 +706,6 @@ noinline void flush_cache_all(void)
 	local_irq_restore(flags);
 
 }
-
-#ifdef CONFIG_ARC_CACHE_VIPT_ALIASING
-
-void flush_cache_mm(struct mm_struct *mm)
-{
-	flush_cache_all();
-}
-
-void flush_cache_page(struct vm_area_struct *vma, unsigned long u_vaddr,
-		      unsigned long pfn)
-{
-	phys_addr_t paddr = pfn << PAGE_SHIFT;
-
-	u_vaddr &= PAGE_MASK;
-
-	__flush_dcache_page(paddr, u_vaddr);
-
-	if (vma->vm_flags & VM_EXEC)
-		__inv_icache_page(paddr, u_vaddr);
-}
-
-void flush_cache_range(struct vm_area_struct *vma, unsigned long start,
-		       unsigned long end)
-{
-	flush_cache_all();
-}
-
-void flush_anon_page(struct vm_area_struct *vma, struct page *page,
-		     unsigned long u_vaddr)
-{
-	/* TBD: do we really need to clear the kernel mapping */
-	__flush_dcache_page((phys_addr_t)page_address(page), u_vaddr);
-	__flush_dcache_page((phys_addr_t)page_address(page),
-			    (phys_addr_t)page_address(page));
-
-}
-
-#endif
 
 void copy_user_highpage(struct page *to, struct page *from,
 	unsigned long u_vaddr, struct vm_area_struct *vma)

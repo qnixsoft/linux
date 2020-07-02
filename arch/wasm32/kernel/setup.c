@@ -54,7 +54,7 @@ void setup_processor(void)
 	char str[512];
 	int cpu_id = smp_processor_id();
 
-	pr_err("%s: Implement me properly.\n", __func__);
+	pr_err("setup_processor\n");
 	arc_init_IRQ();
 	arc_mmu_init();
 	arc_cache_init();
@@ -114,7 +114,7 @@ late_initcall(init_late_machine);
 
 static int show_cpuinfo(struct seq_file *m, void *v)
 {
-	pr_err("%s: not implemented yet\n", __func__);
+	pr_err("show_cpuinfo\n");
 	return 0;
 }
 

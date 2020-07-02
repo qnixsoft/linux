@@ -14,19 +14,19 @@
 void machine_halt(void)
 {
 	/* Halt the processor */
-	pr_err("%s: Implement me.\n", __func__);
+	pr_err("machine_halt\n");
 }
 
 void machine_restart(char *__unused)
 {
 	/* Soft reset : jump to reset vector */
-	pr_err("%s: Implement me properly.\n", __func__);
+	pr_err("machine_restart\n");
 	machine_halt();
 }
 
 void machine_power_off(void)
 {
-	/* FIXME ::  power off ??? */
+	pr_err("machine_power_off\n");
 	machine_halt();
 }
 

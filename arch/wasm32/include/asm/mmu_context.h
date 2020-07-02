@@ -23,6 +23,7 @@
 #include <linux/sched/mm.h>
 
 #include <asm-generic/mm_hooks.h>
+#include <asm-generic/mmu_context.h>
 
 /*		ARC700 ASID Management
  *
@@ -54,106 +55,6 @@
 DECLARE_PER_CPU(unsigned int, asid_cache);
 #define asid_cpu(cpu)		per_cpu(asid_cache, cpu)
 
-/*
- * Get a new ASID if task doesn't have a valid one (unalloc or from prev cycle)
- * Also set the MMU PID register to existing/updated ASID
- */
-static inline void get_new_mmu_context(struct mm_struct *mm)
-{
-	const unsigned int cpu = smp_processor_id();
-	unsigned long flags;
-
-	local_irq_save(flags);
-
-	/*
-	 * Move to new ASID if it was not from current alloc-cycle/generation.
-	 * This is done by ensuring that the generation bits in both mm->ASID
-	 * and cpu's ASID counter are exactly same.
-	 *
-	 * Note: Callers needing new ASID unconditionally, independent of
-	 * 	 generation, e.g. local_flush_tlb_mm() for forking  parent,
-	 * 	 first need to destroy the context, setting it to invalid
-	 * 	 value.
-	 */
-	if (!((asid_mm(mm, cpu) ^ asid_cpu(cpu)) & MM_CTXT_CYCLE_MASK))
-		goto set_hw;
-
-	/* move to new ASID and handle rollover */
-	if (unlikely(!(++asid_cpu(cpu) & MM_CTXT_ASID_MASK))) {
-
-		local_flush_tlb_all();
-
-		/*
-		 * Above check for rollover of 8 bit ASID in 32 bit container.
-		 * If the container itself wrapped around, set it to a non zero
-		 * "generation" to distinguish from no context
-		 */
-		if (!asid_cpu(cpu))
-			asid_cpu(cpu) = MM_CTXT_FIRST_CYCLE;
-	}
-
-	/* Assign new ASID to tsk */
-	asid_mm(mm, cpu) = asid_cpu(cpu);
-
-set_hw:
-	write_aux_reg(ARC_REG_PID, hw_pid(mm, cpu) | MMU_ENABLE);
-
-	local_irq_restore(flags);
-}
-
-/*
- * Initialize the context related info for a new mm_struct
- * instance.
- */
-static inline int
-init_new_context(struct task_struct *tsk, struct mm_struct *mm)
-{
-	int i;
-
-	for_each_possible_cpu(i)
-		asid_mm(mm, i) = MM_CTXT_NO_ASID;
-
-	return 0;
-}
-
-static inline void destroy_context(struct mm_struct *mm)
-{
-	unsigned long flags;
-
-	/* Needed to elide CONFIG_DEBUG_PREEMPT warning */
-	local_irq_save(flags);
-	asid_mm(mm, smp_processor_id()) = MM_CTXT_NO_ASID;
-	local_irq_restore(flags);
-}
-
-/* Prepare the MMU for task: setup PID reg with allocated ASID
-    If task doesn't have an ASID (never alloc or stolen, get a new ASID)
-*/
-static inline void switch_mm(struct mm_struct *prev, struct mm_struct *next,
-			     struct task_struct *tsk)
-{
-	const int cpu = smp_processor_id();
-
-	/*
-	 * Note that the mm_cpumask is "aggregating" only, we don't clear it
-	 * for the switched-out task, unlike some other arches.
-	 * It is used to enlist cpus for sending TLB flush IPIs and not sending
-	 * it to CPUs where a task once ran-on, could cause stale TLB entry
-	 * re-use, specially for a multi-threaded task.
-	 * e.g. T1 runs on C1, migrates to C3. T2 running on C2 munmaps.
-	 *      For a non-aggregating mm_cpumask, IPI not sent C1, and if T1
-	 *      were to re-migrate to C1, it could access the unmapped region
-	 *      via any existing stale TLB entries.
-	 */
-	cpumask_set_cpu(cpu, mm_cpumask(next));
-
-#ifndef CONFIG_SMP
-	/* PGD cached in MMU reg to avoid 3 mem lookups: task->mm->pgd */
-	write_aux_reg(ARC_REG_SCRATCH_DATA0, (u32) next->pgd);
-#endif
-
-	get_new_mmu_context(next);
-}
 
 /*
  * Called at the time of execve() to get a new ASID

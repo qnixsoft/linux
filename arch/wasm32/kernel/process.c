@@ -222,16 +222,6 @@ int copy_thread(unsigned long clone_flags,
 	 */
 	c_callee->r25 = task_thread_info(p)->thr_ptr;
 
-#ifdef CONFIG_ARC_CURR_IN_REG
-	/*
-	 * setup usermode thread pointer #2:
-	 * however for this special use of r25 in kernel, __switch_to() sets
-	 * r25 for kernel needs and only in the final return path is usermode
-	 * r25 setup, from pt_regs->user_r25. So set that up as well
-	 */
-	c_regs->user_r25 = c_callee->r25;
-#endif
-
 	return 0;
 }
 
@@ -250,10 +240,6 @@ void start_thread(struct pt_regs * regs, unsigned long pc, unsigned long usp)
 	 */
 	regs->status32 = STATUS_U_MASK | STATUS_L_MASK;
 	/* regs->status32 = STATUS_U_MASK | STATUS_L_MASK | ISA_INIT_STATUS_BITS; */
-
-#ifdef CONFIG_EZNPS_MTM_EXT
-	regs->eflags = 0;
-#endif
 
 	/* bogus seed values for debugging */
 	regs->lp_start = 0x10;

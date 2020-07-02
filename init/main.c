@@ -566,7 +566,7 @@ asmlinkage __visible void __init start_kernel(void)
 	mm_init_cpumask(&init_mm);
 	pr_err("Skipping setup_command_line and other functions that "
 	       "depend on working mm\n");
-	/* setup_command_line(command_line); */
+	setup_command_line(command_line);
 	setup_nr_cpu_ids();
 	/* setup_per_cpu_areas(); */
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */

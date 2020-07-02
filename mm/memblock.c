@@ -228,6 +228,9 @@ __memblock_find_range_top_down(phys_addr_t start, phys_addr_t end,
 			return cand;
 	}
 
+	pr_err("memblock_find_range_top_down start %u end %u size %u align %u nid %d flags %d\n",
+	       start, end, size, align, nid, flags);
+
 	return 0;
 }
 
@@ -269,6 +272,9 @@ phys_addr_t __init_memblock memblock_find_in_range_node(phys_addr_t size,
 	start = max_t(phys_addr_t, start, PAGE_SIZE);
 	end = max(start, end);
 	kernel_end = __pa_symbol(_end);
+
+	pr_err("memblock_find_in_range_node start %u end %u kernel_end %u\n",
+	       start, end, kernel_end);
 
 	/*
 	 * try bottom-up allocation only when bottom-up mode
@@ -1364,7 +1370,8 @@ static void * __init memblock_alloc_internal(
 	void *ptr;
 	enum memblock_flags flags = choose_memblock_flags();
 
-	pr_err("%s is breaking\n", __func__);
+	pr_err("memblock_alloc_internal size %u align %u min_addr %u max_addr %u nid %d flags %d",
+	       size, align, min_addr, max_addr, nid, flags);
 
 	if (WARN_ONCE(nid == MAX_NUMNODES, "Usage of MAX_NUMNODES is deprecated. Use NUMA_NO_NODE instead\n"))
 		nid = NUMA_NO_NODE;
@@ -1377,6 +1384,8 @@ static void * __init memblock_alloc_internal(
 	if (WARN_ON_ONCE(slab_is_available()))
 		return kzalloc_node(size, GFP_NOWAIT, nid);
 
+	pr_err("here\n");
+
 	if (!align) {
 		dump_stack();
 		align = SMP_CACHE_BYTES;
@@ -1387,9 +1396,11 @@ static void * __init memblock_alloc_internal(
 again:
 	alloc = memblock_find_in_range_node(size, align, min_addr, max_addr,
 					    nid, flags);
+	pr_err("memblock_find_in_range_node returned %u\n", alloc);
 	if (alloc && !memblock_reserve(alloc, size))
 		goto done;
 
+	pr_err("not done yet\n");
 	if (nid != NUMA_NO_NODE) {
 		alloc = memblock_find_in_range_node(size, align, min_addr,
 						    max_addr, NUMA_NO_NODE,
@@ -1412,6 +1423,7 @@ again:
 
 	return NULL;
 done:
+	pr_err("done\n");
 	ptr = phys_to_virt(alloc);
 
 	/*
